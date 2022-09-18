@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Check existing file "launch". If file exist, continue skript. Else exit from script.
+if [ ! -e "/home/kita/PycharmProjects/Otus_Unit_9_BASH/launch" ] ; then
+# Create file "launch".
+  touch /home/kita/PycharmProjects/Otus_Unit_9_BASH/launch
+
+# Create variables.
+  result_file="/home/kita/PycharmProjects/Otus_Unit_9_BASH/result_file"
+  last_launch="/home/kita/PycharmProjects/Otus_Unit_9_BASH/last_launch"
+
+#Check when script started last time. If file "last_launch" doesn't exist, create and write there first date.
+  if [ ! -e $last_launch ] ; then
+
+        touch $last_launch && echo "1545675754" >> $last_launch
+# Parsing ALL access.log from first date to current time in result file.
+#Header
+
+	echo "This script parsed access.log from " $(date -d @1545675754) " to " $(date) >> $result_file
+
+# Parsing IP addresses in access.log and counting.
+        echo "   ---===   Unique IP addresses and quantity in log file   ===--- " >> $result_file
+        cat $1  | cut -f 1 -d ' ' | sort | uniq -c | sort -nr | head -5 | awk '{ print $2" -", $1 }' >> $result_file
+
+# Parsing URLs in access.log and counting.
+        echo "   ---===   Unique URL addresses and quantity in log file   ===---   " >> $result_file
+        cat $1  | cut -f 11 -d ' ' | egrep -o  'http(s?)://([\da-z\.-]+)/' | sort | uniq -c | sort -rn | awk '{ print $2" -", $1 }' >> $result_file
+
+# Parsing HPPT codes and counting.
+        echo "   ---===   Unique HTTP codes and quantity in log file   ===---   " >> $result_file
+        cat $1  | cut -f 9 -d ' ' | egrep '[0-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
+
+# Ender
+        echo "================================END==========================================" >> $result_file
+        echo " " >> $result_file
+
+#Rewrite date (current time)
+        echo $(date +%s) > $last_launch
+
+#Send results on email
+#echo 'Script' | mail -s 'Subject attachment message' -a /home/kita/PycharmProjects/Otus_Unit_9_BASH/result_file totheotus@otus.ru
+
+#If file "last_launch" exist, take time from them and compare with parse time in access.log
+  else
+
+#Change IFS to new string only
+    	IFS=$'\n'
+
+#Create variable, parse time in file last_launch
+      firstdate=$(cat $last_launch | head -1)
+
+#Header
+      echo "This script parsed access.log from " $(date -d @$(cat $last_launch | head -1)) " to " $(date) >> $result_file
+
+#Loop: parse date from access.log, translate data to unix-time and compare that. If data between last launch and current time, write this log to temp test_result file.
+      for str in  $(cat $1)
+
+        do
+
+                data=$(echo $str | cut -f 4,5 -d ' ' | cut -b 2-21 | sed 's/:/ /1' | sed 's/\// /g')
+
+                datadate=$(date --date=$data +%s)
+
+                #echo $firstdate $datadate
+
+                        if [ $datadate -gt $firstdate ] && [ $datadate -lt $(date +%s) ] ; then
+
+                                echo $str >> /home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result
+
+                        fi
+
+        done
+
+# If test_result file doesn't exist, write in result file, that log is empty. Else parsing test_result into file_result. In the end file test_result deleting. rewrint current time.
+      if [ ! -s "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result" ] ; then
+        echo "======From last hour access.log is empty======" >> $result_file
+        echo "================================END==========================================" >> $result_file
+        echo " " >> $result_file
+      else
+
+        echo "   ---===   Unique IP addresses and quantity in log file   ===--- " >> $result_file
+        cat "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result"  | cut -f 1 -d ' ' | sort | uniq -c | sort -rn | head -5 | awk '{ print $2" -", $1 }' >> $result_file
+
+    # Parsing URL and counting
+
+        echo "   ---===   Unique URL addresses and quantity in log file   ===---   " >> $result_file
+        cat "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result"  | cut -f 11 -d ' ' | egrep -o  'http(s?)://([\da-z\.-]+)/' | sort | uniq -c | sort -rn | awk '{ print $2" -", $1 }' >> $result_file
+
+    # Parsing HPPT codes and counting
+
+        echo "   ---===   Unique HTTP codes and quantity in log file   ===---   " >> $result_file
+        cat "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result" | cut -f 9 -d ' ' | egrep '[0-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
+
+        echo "================================END==========================================" >> $result_file
+        echo " " >> $result_file
+
+#Deleting file test_result
+        rm /home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result
+
+      fi
+
+#Rewrite current time
+      echo $(date +%s) > $last_launch
+
+#Send results on email
+# echo 'Script' | mail -s 'Subject attachment message' -a /home/kita/PycharmProjects/Otus_Unit_9_BASH/result_file totheotus@otus.ru
+
+  fi
+
+#Delete file launch
+  rm /home/kita/PycharmProjects/Otus_Unit_9_BASH/launch
+
+else
+
+#If file launch exist, script doesn't exec.
+  echo "===Script already launched!!!==="
+
+  exit
+
+fi
