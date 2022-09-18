@@ -30,6 +30,10 @@ if [ ! -e "/home/kita/PycharmProjects/Otus_Unit_9_BASH/launch" ] ; then
         echo "   ---===   Unique HTTP codes and quantity in log file   ===---   " >> $result_file
         cat $1  | cut -f 9 -d ' ' | egrep '[0-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
 
+# Parsing HPPT codes error and counting.
+        echo "   ---===   Unique HTTP codes error and quantity in log file   ===---   " >> $result_file
+        cat $1  | cut -f 9 -d ' ' | egrep '[4-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
+
 # Ender
         echo "================================END==========================================" >> $result_file
         echo " " >> $result_file
@@ -90,6 +94,10 @@ if [ ! -e "/home/kita/PycharmProjects/Otus_Unit_9_BASH/launch" ] ; then
 
         echo "   ---===   Unique HTTP codes and quantity in log file   ===---   " >> $result_file
         cat "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result" | cut -f 9 -d ' ' | egrep '[0-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
+
+   # Parsing HPPT codes error and counting.
+        echo "   ---===   Unique HTTP codes error and quantity in log file   ===---   " >> $result_file
+        cat "/home/kita/PycharmProjects/Otus_Unit_9_BASH/test_result"  | cut -f 9 -d ' ' | egrep '[4-5][0-5][0-5]' | sort | uniq -c | sort -rn | head -5 | awk ' {print $2" -", $1} ' >> $result_file
 
         echo "================================END==========================================" >> $result_file
         echo " " >> $result_file
